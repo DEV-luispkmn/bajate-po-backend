@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Equipo {
+  id              Int        @id @default(autoincrement())
+  nombre          String     @db.VarChar(100)
+  descripcion     String?    @db.Text
+  logoUrl         String?    @db.VarChar(255)
+  fechaFundacion  DateTime?  @db.Date
+  createdAt       DateTime   @default(now())
+  
+  jugadores       Jugador[]
+  canchasAdmin    Cancha[]
+}
+
+model Jugador {
+  id              Int        @id @default(autoincrement())
+  alias           String     @unique @db.VarChar(50)
+  email           String     @unique @db.VarChar(100)
+  passwordHash    String     @db.VarChar(255)
+  rango           String?    @db.VarChar(50)
+  avatarUrl       String?    @db.VarChar(255)
+  equipoId        Int?
+  createdAt       DateTime   @default(now())
+
+  equipo          Equipo?    @relation(fields: [equipoId], references: [id])
+  eventosCreados  Evento[]
+  bandos          JugadorBando[]
+}
+
+model Cancha {
+  id              Int        @id @default(autoincrement())
+  nombre          String     @db.VarChar(100)
+  latitud         Decimal?   @db.Decimal(10, 8)
+  longitud        Decimal?   @db.Decimal(11, 8)
+  adminEquipoId   Int?
+  
+  equipoAdmin     Equipo?    @relation(fields: [adminEquipoId], references: [id])
+  eventos         Evento[]
+}
+
+model Evento {
+  id              Int        @id @default(autoincrement())
+  titulo          String     @db.VarChar(150)
+  tipo            TipoEvento
+  privacidad      Privacidad
+  canchaId        Int
+  organizadorId   Int
+  fechaInicio     DateTime?
+  estado          EstadoEvento @default(PROGRAMADO)
+  codigoInvitacion String?   @unique @db.VarChar(20)
+
+  cancha          Cancha     @relation(fields: [canchaId], references: [id])
+  organizador     Jugador    @relation(fields: [organizadorId], references: [id])
+  bandos          Bando[]
+  partidas        Partida[]
+  jugadores       JugadorBando[]
+}
+
+model Bando {
+  id              Int        @id @default(autoincrement())
+  eventoId        Int
+  nombre          String     @db.VarChar(50)
+  colorHex        String?    @db.VarChar(7)
+  qrToken         String?    @unique @db.VarChar(64)
+
+  evento          Evento     @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  jugadores       JugadorBando[]
+  rondasGanadas   Ronda[]
+}
+
+model JugadorBando {
+  eventoId        Int
+  jugadorId       Int
+  bandoId         Int
+  rol             String     @default("ASALTO") @db.VarChar(50)
+
+  evento          Evento     @relation(fields: [eventoId], references: [id])
+  jugador         Jugador    @relation(fields: [jugadorId], references: [id])
+  bando           Bando      @relation(fields: [bandoId], references: [id])
+
+  @@id([eventoId, jugadorId])
+}
+
+model Partida {
+  id              Int        @id @default(autoincrement())
+  eventoId        Int
+  nombre          String?    @db.VarChar(100)
+  estado          EstadoPartida @default(PENDIENTE)
+
+  evento          Evento     @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  rondas          Ronda[]
+}
+
+model Ronda {
+  id              Int        @id @default(autoincrement())
+  partidaId       Int
+  numeroRonda     Int
+  bandoGanadorId  Int?
+  estadoSync      EstadoSync @default(SINCRONIZADO)
+  fechaRegistro   DateTime   @default(now())
+
+  partida         Partida    @relation(fields: [partidaId], references: [id], onDelete: Cascade)
+  bandoGanador    Bando?     @relation(fields: [bandoGanadorId], references: [id])
+}
+
+enum TipoEvento {
+  PICHANGA
+  VERSUS
+  TORNEO
+  EVENTO_MASIVO
+}
+
+enum Privacidad {
+  ABIERTO
+  CERRADO
+}
+
+enum EstadoEvento {
+  PROGRAMADO
+  EN_CURSO
+  FINALIZADO
+  CANCELADO
+}
+
+enum EstadoPartida {
+  PENDIENTE
+  EN_CURSO
+  FINALIZADA
+}
+
+enum EstadoSync {
+  PENDIENTE_SYNC
+  SINCRONIZADO
+}
