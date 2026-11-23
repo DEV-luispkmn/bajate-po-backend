@@ -9,4 +9,13 @@ export class CrearPartidaDto {
   @IsOptional()
   @MaxLength(100)
   readonly nombre?: string;
+
+  @IsNumber()
+  @IsOptional()
+  readonly modalidadId?: number;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  readonly modalidadNombre?: string;
 }

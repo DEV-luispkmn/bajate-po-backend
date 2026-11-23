@@ -1,6 +1,24 @@
 export type EstadoPartida = 'PENDIENTE' | 'EN_CURSO' | 'FINALIZADA';
 export type EstadoSync = 'PENDIENTE_SYNC' | 'SINCRONIZADO';
 
+export interface JugadorPartidaInfo {
+  jugadorId: number;
+  alias: string;
+  avatarUrl?: string;
+  bandoId: number;
+  bandoNombre?: string;
+  rol: string;
+  fama?: number;
+}
+
+export interface MvpInfo {
+  bandoId: number;
+  bandoNombre?: string;
+  jugadorId: number;
+  alias: string;
+  votos: number;
+}
+
 export class Ronda {
   constructor(
     public readonly id: number,
@@ -21,5 +39,11 @@ export class Partida {
     public readonly nombre?: string,
     public readonly rondas?: Ronda[],
     public readonly marcador?: Record<number, number>, // bandoId -> rondasGanadas
+    public readonly modalidadId?: number,
+    public readonly modalidadNombre?: string,
+    public readonly jugadores?: JugadorPartidaInfo[],
+    public readonly mvps?: MvpInfo[],
+    public readonly finalizadaAt?: Date,
+    public readonly createdAt?: Date,
   ) {}
 }

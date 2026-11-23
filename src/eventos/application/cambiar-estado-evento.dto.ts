@@ -1,4 +1,4 @@
-import { IsEnum } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 export enum EstadoEventoDto {
   PROGRAMADO = 'PROGRAMADO',
@@ -12,4 +12,8 @@ export class CambiarEstadoEventoDto {
     message: 'El estado debe ser PROGRAMADO, EN_CURSO, FINALIZADO o CANCELADO',
   })
   readonly estado: EstadoEventoDto;
+
+  @IsString()
+  @IsOptional()
+  readonly motivoCancelacion?: string;
 }

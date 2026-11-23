@@ -16,9 +16,13 @@ describe('UnirseEventoUseCase', () => {
       findBandoByQrToken: jest.fn(),
       findAll: jest.fn(),
       unirJugadorABando: jest.fn(),
-      obtenerJugadoresDeEvento: jest.fn(),
+      obtenerJugadoresDeEvento: jest.fn().mockResolvedValue([]),
       actualizarEstado: jest.fn(),
-    };
+      modificar: jest.fn(),
+      eliminar: jest.fn(),
+      listarEquipos: jest.fn(),
+      findJugadorEquipoId: jest.fn().mockResolvedValue(null) as any,
+    } as any;
 
     useCase = new UnirseEventoUseCase(eventoRepoMock);
   });
@@ -26,6 +30,9 @@ describe('UnirseEventoUseCase', () => {
   it('debe unirse a un bando escaneando el código QR directamente en la cancha', async () => {
     const mockBando = new Bando(5, 12, 'Bando Alfa', '#FF0000', 'bando_qr_123');
     eventoRepoMock.findBandoByQrToken.mockResolvedValue(mockBando);
+    eventoRepoMock.findById.mockResolvedValue(
+      new Evento(12, 'Pichanga Sábado', 'PICHANGA', 'ABIERTO', 1, 10, 'PROGRAMADO'),
+    );
     eventoRepoMock.unirJugadorABando.mockResolvedValue(
       new JugadorEnBando(12, 44, 5, 'SNIPER', 'SniperPro'),
     );
@@ -62,7 +69,13 @@ describe('UnirseEventoUseCase', () => {
       1,
       10,
       'PROGRAMADO',
+      undefined,
       new Date(),
+      undefined,
+      'Metropolitana',
+      'Santiago',
+      undefined,
+      undefined,
       'BP-A1B2C3',
       [
         new Bando(1, 20, 'Bando Rojo'),
@@ -97,7 +110,13 @@ describe('UnirseEventoUseCase', () => {
       1,
       10,
       'PROGRAMADO',
+      undefined,
       new Date(),
+      undefined,
+      'Metropolitana',
+      'Santiago',
+      undefined,
+      undefined,
       'BP-A1B2C3',
       [new Bando(1, 20, 'Bando Rojo')],
     );

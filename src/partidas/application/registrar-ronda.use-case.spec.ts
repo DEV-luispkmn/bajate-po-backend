@@ -16,11 +16,17 @@ describe('Partidas y Rondas UseCases', () => {
     repoMock = {
       create: jest.fn(),
       findById: jest.fn(),
+      findByIdConBandos: jest.fn(),
       findByEventoId: jest.fn(),
       actualizarEstado: jest.fn(),
       registrarRonda: jest.fn(),
       sincronizarRondas: jest.fn(),
       obtenerRondasDePartida: jest.fn(),
+      obtenerJugadoresDePartida: jest.fn(),
+      asignarJugadorAPartida: jest.fn(),
+      obtenerMvpsDePartida: jest.fn(),
+      registrarVotoMvp: jest.fn(),
+      haVotadoMvp: jest.fn(),
     };
 
     notificationMock = {
@@ -35,7 +41,19 @@ describe('Partidas y Rondas UseCases', () => {
 
   describe('RegistrarRondaUseCase', () => {
     it('debe registrar una ronda en la partida y emitir evento por WebSockets', async () => {
-      repoMock.findById.mockResolvedValue(new Partida(1, 10, 'EN_CURSO', 'Ronda 1-4'));
+      repoMock.findByIdConBandos.mockResolvedValue({
+        partida: new Partida(1, 10, 'EN_CURSO', 'Ronda 1-4'),
+        bandos: [
+          { id: 1, nombre: 'Bando Alfa' },
+          { id: 2, nombre: 'Bando Bravo' },
+        ],
+        organizadorId: 1,
+        tituloEvento: 'Evento Test',
+      });
+      repoMock.obtenerJugadoresDePartida.mockResolvedValue([
+        { jugadorId: 10, alias: 'Soldado 1', bandoId: 1, rol: 'ASALTO' },
+        { jugadorId: 11, alias: 'Soldado 2', bandoId: 2, rol: 'ASALTO' },
+      ]);
       const mockRonda = new Ronda(1, 1, 1, 2, 'SINCRONIZADO', new Date(), 'Bando Bravo');
       repoMock.registrarRonda.mockResolvedValue(mockRonda);
       repoMock.obtenerRondasDePartida.mockResolvedValue([mockRonda]);
@@ -56,8 +74,28 @@ describe('Partidas y Rondas UseCases', () => {
       );
     });
 
+    it('debe rechazar registrar ronda si algún bando no tiene jugadores', async () => {
+      repoMock.findByIdConBandos.mockResolvedValue({
+        partida: new Partida(1, 10, 'EN_CURSO', 'Ronda 1-4'),
+        bandos: [
+          { id: 1, nombre: 'Bando Alfa' },
+          { id: 2, nombre: 'Bando Bravo' },
+        ],
+        organizadorId: 1,
+        tituloEvento: 'Evento Test',
+      });
+      // Solo el bando 1 tiene jugadores
+      repoMock.obtenerJugadoresDePartida.mockResolvedValue([
+        { jugadorId: 10, alias: 'Soldado 1', bandoId: 1, rol: 'ASALTO' },
+      ]);
+
+      await expect(
+        registrarUseCase.execute(1, { numeroRonda: 1, bandoGanadorId: 1 }),
+      ).rejects.toThrow('No se pueden asignar puntajes a la partida: el bando "Bando Bravo" no tiene jugadores');
+    });
+
     it('debe lanzar NotFoundException si la partida no existe', async () => {
-      repoMock.findById.mockResolvedValue(null);
+      repoMock.findByIdConBandos.mockResolvedValue(null);
 
       await expect(
         registrarUseCase.execute(999, { numeroRonda: 1 }),
