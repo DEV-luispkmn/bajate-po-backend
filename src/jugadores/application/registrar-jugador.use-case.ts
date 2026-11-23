@@ -25,6 +25,10 @@ export class RegistrarJugadorUseCase {
       alias: dto.alias,
       email: dto.email,
       passwordHash,
+      region: dto.region,
+      ciudad: dto.ciudad,
+      avatarUrl: dto.avatarUrl,
+      roles: dto.roles,
     });
   }
 }

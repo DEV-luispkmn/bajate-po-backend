@@ -1,4 +1,11 @@
-import { IsEmail, IsString, MinLength, MaxLength, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  MaxLength,
+  Matches,
+  IsOptional,
+} from 'class-validator';
 
 export class RegistrarJugadorDto {
   @IsString()
@@ -15,4 +22,23 @@ export class RegistrarJugadorDto {
     message: 'La contraseña debe incluir mayúsculas, minúsculas y un número o carácter especial',
   })
   readonly password: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  readonly region?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(100)
+  readonly ciudad?: string;
+
+  @IsString()
+  @IsOptional()
+  readonly avatarUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(150)
+  readonly roles?: string;
 }

@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JugadoresModule } from '../jugadores/jugadores.module';
 import { AuthController } from './infrastructure/auth.controller';
 import { LoginUseCase } from './application/login.use-case';
+import { LoginRateLimiterService } from './application/login-rate-limiter.service';
 import { JwtStrategy } from './infrastructure/jwt.strategy';
 import { JwtAuthGuard } from './infrastructure/jwt-auth.guard';
 
@@ -17,7 +18,7 @@ import { JwtAuthGuard } from './infrastructure/jwt-auth.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [LoginUseCase, JwtStrategy, JwtAuthGuard],
+  providers: [LoginUseCase, LoginRateLimiterService, JwtStrategy, JwtAuthGuard],
   exports: [JwtAuthGuard, JwtModule, PassportModule],
 })
 export class AuthModule {}
