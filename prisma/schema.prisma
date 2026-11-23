@@ -7,59 +7,152 @@ datasource db {
 }
 
 model Equipo {
-  id              Int        @id @default(autoincrement())
-  nombre          String     @db.VarChar(100)
-  descripcion     String?    @db.Text
-  logoUrl         String?    @db.VarChar(255)
-  fechaFundacion  DateTime?  @db.Date
-  createdAt       DateTime   @default(now())
+  id                    Int        @id @default(autoincrement())
+  nombre                String     @db.VarChar(100)
+  lema                  String?    @db.VarChar(150)
+  descripcion           String?    @db.Text
+  logoUrl               String?    @db.LongText
+  region                String?    @db.VarChar(100)
+  ciudad                String?    @db.VarChar(100)
+  capitanId             Int?
+  fundadorId            Int?
+  tlId                  Int?
+  postulacionesAbiertas Boolean    @default(true)
+  activo                Boolean    @default(true)
+  codigoAcceso          String?    @db.VarChar(20)
+  fechaFundacion        DateTime?  @default(now())
+  createdAt             DateTime   @default(now())
   
-  jugadores       Jugador[]
-  canchasAdmin    Cancha[]
+  jugadores             Jugador[]
+  canchasAdmin          Cancha[]
+  postulaciones         PostulacionEquipo[]
+
+  @@index([region])
+  @@index([codigoAcceso])
 }
 
 model Jugador {
-  id              Int        @id @default(autoincrement())
-  alias           String     @unique @db.VarChar(50)
-  email           String     @unique @db.VarChar(100)
-  passwordHash    String     @db.VarChar(255)
-  rango           String?    @db.VarChar(50)
-  avatarUrl       String?    @db.VarChar(255)
-  equipoId        Int?
-  createdAt       DateTime   @default(now())
+  id                  Int        @id @default(autoincrement())
+  alias               String     @unique @db.VarChar(50)
+  email               String     @unique @db.VarChar(100)
+  passwordHash        String     @db.VarChar(255)
+  rango               String?    @db.VarChar(50)
+  avatarUrl           String?    @db.LongText
+  region              String?    @db.VarChar(100)
+  ciudad              String?    @db.VarChar(100)
+  roles               String?    @db.VarChar(150)
+  recibeNotificaciones Boolean   @default(true)
+  pushToken           String?    @db.VarChar(255)
+  equipoId            Int?
+  rangoMilitarId      Int?
+  esAdmin             Boolean    @default(false)
+  fama                Float      @default(0)
+  mvpsGanados         Int        @default(0)
+  createdAt           DateTime   @default(now())
 
-  equipo          Equipo?    @relation(fields: [equipoId], references: [id])
-  eventosCreados  Evento[]
-  bandos          JugadorBando[]
+  equipo              Equipo?        @relation(fields: [equipoId], references: [id])
+  rangoMilitar        RangoMilitar?  @relation(fields: [rangoMilitarId], references: [id])
+  eventosCreados      Evento[]
+  eventosCoorganizados OrganizadorEvento[]
+  bandosLiderados      Bando[]        @relation("LiderBando")
+  escuadrasLideradas   Escuadra[]     @relation("LiderEscuadra")
+  canchasCreadas      Cancha[]       @relation("CanchasCreadas")
+  bandos              JugadorBando[]
+  partidasJugadas     JugadorPartida[]
+  votosMvpEmitidos    VotoMvpPartida[] @relation("VotosEmitidos")
+  votosMvpRecibidos   VotoMvpPartida[] @relation("VotosRecibidos")
+  evaluacionesFamaEmitidas  EvaluacionFama[] @relation("EvaluacionesEmitidas")
+  evaluacionesFamaRecibidas EvaluacionFama[] @relation("EvaluacionesRecibidas")
+  logros              JugadorLogro[]
+  tickets             TicketSoporte[]
+  postulaciones       PostulacionEquipo[]
+  notificaciones      Notificacion[]
+  registrosCrono      RegistroCronoReplica[]
+}
+
+enum EstadoCancha {
+  EN_REVISION
+  ACTIVA
+  RECHAZADA
 }
 
 model Cancha {
-  id              Int        @id @default(autoincrement())
-  nombre          String     @db.VarChar(100)
-  latitud         Decimal?   @db.Decimal(10, 8)
-  longitud        Decimal?   @db.Decimal(11, 8)
+  id              Int          @id @default(autoincrement())
+  nombre          String       @db.VarChar(100)
+  descripcion     String?      @db.Text
+  region          String?      @db.VarChar(100)
+  ciudad          String?      @db.VarChar(100)
+  latitud         Decimal?     @db.Decimal(10, 8)
+  longitud        Decimal?     @db.Decimal(11, 8)
+  esAbierta       Boolean      @default(true)
   adminEquipoId   Int?
+  creadorId       Int?
+  activa          Boolean      @default(false)
+  estado          EstadoCancha @default(EN_REVISION)
+  mapaTacticoUrl  String?      @db.LongText
+  createdAt       DateTime     @default(now())
   
-  equipoAdmin     Equipo?    @relation(fields: [adminEquipoId], references: [id])
+  creador         Jugador?     @relation("CanchasCreadas", fields: [creadorId], references: [id])
+  equipoAdmin     Equipo?      @relation(fields: [adminEquipoId], references: [id])
   eventos         Evento[]
+  fotos           CanchaFoto[]
+}
+
+model CanchaFoto {
+  id          Int      @id @default(autoincrement())
+  canchaId    Int
+  url         String   @db.LongText
+  descripcion String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  cancha      Cancha   @relation(fields: [canchaId], references: [id], onDelete: Cascade)
 }
 
 model Evento {
   id              Int        @id @default(autoincrement())
   titulo          String     @db.VarChar(150)
+  descripcion     String?    @db.Text
   tipo            TipoEvento
   privacidad      Privacidad
-  canchaId        Int
+  region          String?    @db.VarChar(100)
+  ciudad          String?    @db.VarChar(100)
+  canchaId        Int?
+  latitud         Float?
+  longitud        Float?
+  direccionTexto  String?    @db.VarChar(255)
+  mapaTacticoUrl  String?    @db.LongText
+  mapaPines       Json?
   organizadorId   Int
   fechaInicio     DateTime?
+  fechaFin        DateTime?
+  equipoAId       Int?
+  equipoBId       Int?
   estado          EstadoEvento @default(PROGRAMADO)
+  inscripcionesAbiertas Boolean @default(true)
   codigoInvitacion String?   @unique @db.VarChar(20)
+  motivoCancelacion String?  @db.Text
 
-  cancha          Cancha     @relation(fields: [canchaId], references: [id])
+  cancha          Cancha?    @relation(fields: [canchaId], references: [id])
   organizador     Jugador    @relation(fields: [organizadorId], references: [id])
+  organizadores   OrganizadorEvento[]
   bandos          Bando[]
   partidas        Partida[]
   jugadores       JugadorBando[]
+  fases           FaseEvento[]
+  tacsop          EventoTacsop?
+  registrosCrono  RegistroCronoReplica[]
+  misiones        MisionEvento[]
+}
+
+model OrganizadorEvento {
+  eventoId   Int
+  jugadorId  Int
+  createdAt  DateTime @default(now())
+
+  evento     Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  jugador    Jugador  @relation(fields: [jugadorId], references: [id], onDelete: Cascade)
+
+  @@id([eventoId, jugadorId])
 }
 
 model Bando {
@@ -68,33 +161,196 @@ model Bando {
   nombre          String     @db.VarChar(50)
   colorHex        String?    @db.VarChar(7)
   qrToken         String?    @unique @db.VarChar(64)
+  cupoMax         Int?
+  liderId         Int?
+  frecuenciaRadio String?    @db.VarChar(50)
+  subtonoRadio    String?    @db.VarChar(50)
 
   evento          Evento     @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  lider           Jugador?   @relation("LiderBando", fields: [liderId], references: [id], onDelete: SetNull)
   jugadores       JugadorBando[]
   rondasGanadas   Ronda[]
+  jugadoresPartida JugadorPartida[]
+  votosMvpPartida  VotoMvpPartida[]
+  escuadras       Escuadra[]
+  misiones        MisionEvento[]
+}
+
+model Escuadra {
+  id              Int      @id @default(autoincrement())
+  bandoId         Int
+  nombre          String   @db.VarChar(50)
+  cupoMax         Int?     @default(10)
+  liderId         Int?
+  frecuenciaRadio String?  @db.VarChar(50)
+  subtonoRadio    String?  @db.VarChar(50)
+  createdAt       DateTime @default(now())
+
+  bando     Bando          @relation(fields: [bandoId], references: [id], onDelete: Cascade)
+  lider     Jugador?       @relation("LiderEscuadra", fields: [liderId], references: [id], onDelete: SetNull)
+  jugadores JugadorBando[]
 }
 
 model JugadorBando {
   eventoId        Int
   jugadorId       Int
-  bandoId         Int
-  rol             String     @default("ASALTO") @db.VarChar(50)
+  bandoId         Int?
+  escuadraId      Int?
+  rol             String     @default("ASALTO") @db.VarChar(100)
 
-  evento          Evento     @relation(fields: [eventoId], references: [id])
+  evento          Evento     @relation(fields: [eventoId], references: [id], onDelete: Cascade)
   jugador         Jugador    @relation(fields: [jugadorId], references: [id])
-  bando           Bando      @relation(fields: [bandoId], references: [id])
+  bando           Bando?     @relation(fields: [bandoId], references: [id], onDelete: Cascade)
+  escuadra        Escuadra?  @relation(fields: [escuadraId], references: [id], onDelete: SetNull)
 
   @@id([eventoId, jugadorId])
 }
 
 model Partida {
-  id              Int        @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   eventoId        Int
-  nombre          String?    @db.VarChar(100)
+  nombre          String?       @db.VarChar(100)
   estado          EstadoPartida @default(PENDIENTE)
+  modalidadId     Int?
+  modalidadNombre String?       @db.VarChar(100)
+  finalizadaAt    DateTime?
+  createdAt       DateTime      @default(now())
 
-  evento          Evento     @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  evento          Evento            @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  modalidad       ModalidadPartida? @relation(fields: [modalidadId], references: [id])
   rondas          Ronda[]
+  jugadores       JugadorPartida[]
+  votosMvp        VotoMvpPartida[]
+  evaluacionesFama EvaluacionFama[]
+}
+
+model JugadorPartida {
+  partidaId   Int
+  jugadorId   Int
+  bandoId     Int
+  rol         String     @default("ASALTO") @db.VarChar(100)
+  esMvp       Boolean    @default(false)
+
+  partida     Partida    @relation(fields: [partidaId], references: [id], onDelete: Cascade)
+  jugador     Jugador    @relation(fields: [jugadorId], references: [id], onDelete: Cascade)
+  bando       Bando      @relation(fields: [bandoId], references: [id], onDelete: Cascade)
+
+  @@id([partidaId, jugadorId])
+  @@index([partidaId])
+  @@index([jugadorId])
+  @@index([bandoId])
+}
+
+model VotoMvpPartida {
+  id          Int      @id @default(autoincrement())
+  partidaId   Int
+  votanteId   Int
+  candidatoId Int
+  bandoId     Int
+  createdAt   DateTime @default(now())
+
+  partida     Partida  @relation(fields: [partidaId], references: [id], onDelete: Cascade)
+  votante     Jugador  @relation("VotosEmitidos", fields: [votanteId], references: [id], onDelete: Cascade)
+  candidato   Jugador  @relation("VotosRecibidos", fields: [candidatoId], references: [id], onDelete: Cascade)
+  bando       Bando    @relation(fields: [bandoId], references: [id], onDelete: Cascade)
+
+  @@unique([partidaId, votanteId])
+  @@index([partidaId])
+  @@index([candidatoId])
+  @@index([bandoId])
+}
+
+model ModalidadPartida {
+  id          Int        @id @default(autoincrement())
+  codigo      String     @unique @db.VarChar(50)
+  nombre      String     @db.VarChar(100)
+  descripcion String?    @db.Text
+  reglas      String?    @db.Text
+  icono       String?    @db.VarChar(50)
+  activa      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+
+  partidas    Partida[]
+}
+
+model RolTactico {
+  id          Int        @id @default(autoincrement())
+  codigo      String     @unique @db.VarChar(50)
+  nombre      String     @db.VarChar(100)
+  descripcion String?    @db.Text
+  icono       String?    @db.VarChar(50)
+  activo      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+}
+
+model RangoMilitar {
+  id               Int        @id @default(autoincrement())
+  orden            Int        @unique
+  codigo           String     @unique @db.VarChar(50)
+  nombre           String     @db.VarChar(50)
+  puntosRequeridos Int        @default(0)
+  logrosRequeridos Int        @default(0)
+  insigniaUrl      String?    @db.VarChar(255)
+  descripcion      String?    @db.Text
+  createdAt        DateTime   @default(now())
+
+  jugadores        Jugador[]
+  logrosDesbloquean Logro[]
+}
+
+model Logro {
+  id               Int           @id @default(autoincrement())
+  codigo           String        @unique @db.VarChar(50)
+  nombre           String        @db.VarChar(100)
+  descripcion      String        @db.Text
+  icono            String?       @db.VarChar(50)
+  puntosOtorgados  Int           @default(100)
+  hitoTipo         String        @db.VarChar(50)
+  metaHito         Int           @default(1)
+  rangoDesbloqueadoId Int?
+  createdAt        DateTime      @default(now())
+
+  rangoDesbloqueado RangoMilitar? @relation(fields: [rangoDesbloqueadoId], references: [id])
+  jugadores        JugadorLogro[]
+}
+
+model JugadorLogro {
+  jugadorId        Int
+  logroId          Int
+  fechaDesbloqueo  DateTime      @default(now())
+
+  jugador          Jugador       @relation(fields: [jugadorId], references: [id], onDelete: Cascade)
+  logro            Logro         @relation(fields: [logroId], references: [id], onDelete: Cascade)
+
+  @@id([jugadorId, logroId])
+}
+
+model TicketSoporte {
+  id               Int           @id @default(autoincrement())
+  jugadorId        Int
+  tipo             TipoTicket    @default(IDEA)
+  titulo           String        @db.VarChar(150)
+  mensaje          String        @db.Text
+  estado           EstadoTicket  @default(PENDIENTE)
+  respuestaAdmin   String?       @db.Text
+  createdAt        DateTime      @default(now())
+
+  jugador          Jugador       @relation(fields: [jugadorId], references: [id], onDelete: Cascade)
+}
+
+enum TipoTicket {
+  IDEA
+  SUGERENCIA
+  PROBLEMA
+  CANCHA
+  OTRO
+}
+
+enum EstadoTicket {
+  PENDIENTE
+  EN_REVISION
+  RESPONDIDO
+  CERRADO
 }
 
 model Ronda {
@@ -137,4 +393,165 @@ enum EstadoPartida {
 enum EstadoSync {
   PENDIENTE_SYNC
   SINCRONIZADO
+}
+
+enum EstadoPostulacion {
+  PENDIENTE
+  ACEPTADA
+  RECHAZADA
+  CANCELADA
+}
+
+model PostulacionEquipo {
+  id            Int               @id @default(autoincrement())
+  equipoId      Int
+  jugadorId     Int
+  mensaje       String?           @db.Text
+  contacto      String?           @db.VarChar(100)
+  estado        EstadoPostulacion @default(PENDIENTE)
+  motivoRechazo String?           @db.Text
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  equipo      Equipo            @relation(fields: [equipoId], references: [id], onDelete: Cascade)
+  jugador     Jugador           @relation(fields: [jugadorId], references: [id], onDelete: Cascade)
+
+  @@index([equipoId])
+  @@index([jugadorId])
+}
+
+enum TipoNotificacion {
+  POSTULACION_APROBADA
+  POSTULACION_RECHAZADA
+  NUEVA_POSTULACION
+  EVENTO_CANCELADO
+  EVENTO_INICIADO
+  SISTEMA
+}
+
+model Notificacion {
+  id        Int              @id @default(autoincrement())
+  jugadorId Int
+  titulo    String           @db.VarChar(150)
+  mensaje   String           @db.Text
+  tipo      TipoNotificacion @default(SISTEMA)
+  leida     Boolean          @default(false)
+  link      String?          @db.Text
+  createdAt DateTime         @default(now())
+
+  jugador   Jugador          @relation(fields: [jugadorId], references: [id], onDelete: Cascade)
+
+  @@index([jugadorId])
+  @@index([leida])
+}
+
+model EventoTacsop {
+  id                    Int      @id @default(autoincrement())
+  eventoId              Int      @unique
+  presetTipo            String   @default("CUSTOM") // COMBAT_MISSION, MILSIM, CUSTOM
+  vidasMax              Int      @default(2)
+  requiereTorniquete    Boolean  @default(true)
+  torniquetesPorJugador Int      @default(1)
+  tiempoDesangradoMin   Int      @default(5)
+  soloMedicoRevive      Boolean  @default(false)
+  requierePanueloRojo   Boolean  @default(true)
+  luzRojaNocturna       String   @default("RECOMENDADA") // OBLIGATORIA, RECOMENDADA, NO_REQUERIDA
+  tipoCargadores        String   @default("MID_CAP") // REAL_CAP, MID_CAP, LIBRE
+  limiteMunicionBbs     Int?
+  pirotecniaPermitida   Boolean  @default(false)
+  humoFrioPermitido     Boolean  @default(true)
+  limitesCrono          Json?    // [{ categoria: 'ASALTO', maxJoules: 1.49, maxFps: 400, medMetros: 10, tipoDisparo: 'SEMI_AUTO' }]
+  frecuenciaEmergencia  String?  @db.VarChar(50) // "462.5625 MHz"
+  frecuenciaStaff       String?  @db.VarChar(50) // "462.5875 MHz"
+  subtonoStaff          String?  @db.VarChar(50) // "67.0 Hz"
+  reglasAdicionales     String?  @db.Text
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  evento                Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+}
+
+model FaseEvento {
+  id          Int       @id @default(autoincrement())
+  eventoId    Int
+  orden       Int       @default(1)
+  nombre      String    @db.VarChar(100)
+  descripcion String?   @db.Text
+  horaInicio  DateTime?
+  horaFin     DateTime?
+  esFaseCrono Boolean   @default(false)
+  activa      Boolean   @default(false)
+  completada  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  evento      Evento    @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+
+  @@index([eventoId])
+}
+
+model RegistroCronoReplica {
+  id          Int      @id @default(autoincrement())
+  eventoId    Int
+  jugadorId   Int
+  tipoReplica String   @default("PRIMARIA") // PRIMARIA, PRIMARIA_2, SECUNDARIA, RESPALDO
+  categoria   String   @db.VarChar(50)      // ASALTO, DMR, SNIPER, SOPORTE, PISTOLA
+  modelo      String?  @db.VarChar(100)
+  joules      Float
+  fps         Int?
+  gramajeBb   Float?
+  aprobado    Boolean  @default(true)
+  notas       String?  @db.VarChar(150)
+  cronoPorId  Int?
+  createdAt   DateTime @default(now())
+
+  evento      Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  jugador     Jugador  @relation(fields: [jugadorId], references: [id], onDelete: Cascade)
+
+  @@index([eventoId, jugadorId])
+}
+
+model MisionEvento {
+  id                    Int      @id @default(autoincrement())
+  eventoId              Int
+  bandoId               Int
+  titulo                String   @db.VarChar(150)
+  descripcionLider      String   @db.Text
+  descripcionOperadores String   @db.Text
+  fotoUrl               String?  @db.LongText
+  estado                String   @default("ACTIVA") @db.VarChar(50)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  evento                Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  bando                 Bando    @relation(fields: [bandoId], references: [id], onDelete: Cascade)
+
+  @@index([eventoId])
+  @@index([bandoId])
+}
+
+model EvaluacionFama {
+  id          Int                @id @default(autoincrement())
+  partidaId   Int?
+  eventoId    Int?
+  evaluadorId Int
+  evaluadoId  Int
+  tipo        TipoEvaluacionFama
+  categoria   String             @db.VarChar(50)
+  esAliado    Boolean            @default(false)
+  mismoEquipo Boolean            @default(false)
+  deltaFama   Float
+  createdAt   DateTime           @default(now())
+
+  partida     Partida?           @relation(fields: [partidaId], references: [id], onDelete: Cascade)
+  evaluador   Jugador            @relation("EvaluacionesEmitidas", fields: [evaluadorId], references: [id], onDelete: Cascade)
+  evaluado    Jugador            @relation("EvaluacionesRecibidas", fields: [evaluadoId], references: [id], onDelete: Cascade)
+
+  @@unique([partidaId, evaluadorId, evaluadoId])
+  @@index([evaluadoId])
+  @@index([partidaId])
+}
+
+enum TipoEvaluacionFama {
+  REPORTE
+  RECONOCIMIENTO
 }
