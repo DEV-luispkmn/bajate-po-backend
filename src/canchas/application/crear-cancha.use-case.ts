@@ -11,12 +11,23 @@ export class CrearCanchaUseCase {
     private readonly canchaRepository: ICanchaRepository,
   ) {}
 
-  async execute(dto: CrearCanchaDto): Promise<Cancha> {
+  async execute(dto: CrearCanchaDto, creadorId?: number): Promise<Cancha> {
     return this.canchaRepository.create({
       nombre: dto.nombre,
+      descripcion: dto.descripcion,
+      region: dto.region,
+      ciudad: dto.ciudad,
       latitud: dto.latitud,
       longitud: dto.longitud,
+      esAbierta: dto.esAbierta !== undefined ? dto.esAbierta : true,
       adminEquipoId: dto.adminEquipoId,
+      creadorId,
+      activa: false,
+      estado: 'EN_REVISION',
+      fotos: dto.fotos?.map((f) => ({
+        url: f.url,
+        descripcion: f.descripcion,
+      })),
     });
   }
 }

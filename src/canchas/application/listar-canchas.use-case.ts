@@ -10,7 +10,11 @@ export class ListarCanchasUseCase {
     private readonly canchaRepository: ICanchaRepository,
   ) {}
 
-  async execute(): Promise<Cancha[]> {
-    return this.canchaRepository.findAll();
+  async execute(
+    region?: string,
+    regiones?: string[],
+    usuarioId?: number,
+  ): Promise<Cancha[]> {
+    return this.canchaRepository.findAll(region, regiones, usuarioId);
   }
 }

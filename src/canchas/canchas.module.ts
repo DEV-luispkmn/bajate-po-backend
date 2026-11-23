@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { CanchasController } from './infrastructure/canchas.controller';
 import { CrearCanchaUseCase } from './application/crear-cancha.use-case';
+import { ModificarCanchaUseCase } from './application/modificar-cancha.use-case';
 import { ListarCanchasUseCase } from './application/listar-canchas.use-case';
 import { CANCHA_REPOSITORY } from './domain/cancha.repository.interface';
 import { PrismaCanchaRepository } from './infrastructure/prisma-cancha.repository';
@@ -9,6 +10,7 @@ import { PrismaCanchaRepository } from './infrastructure/prisma-cancha.repositor
   controllers: [CanchasController],
   providers: [
     CrearCanchaUseCase,
+    ModificarCanchaUseCase,
     ListarCanchasUseCase,
     {
       provide: CANCHA_REPOSITORY,
