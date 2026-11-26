@@ -330,7 +330,7 @@ model TicketSoporte {
   jugadorId        Int
   tipo             TipoTicket    @default(IDEA)
   titulo           String        @db.VarChar(150)
-  mensaje          String        @db.Text
+  mensaje          String        @db.LongText
   estado           EstadoTicket  @default(PENDIENTE)
   respuestaAdmin   String?       @db.Text
   createdAt        DateTime      @default(now())
