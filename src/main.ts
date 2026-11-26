@@ -1,19 +1,36 @@
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { json, urlencoded } from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bodyParser: false });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bodyParser: false,
+  });
+
+  app.set('trust proxy', 1);
 
   // Aumentar el límite del body parser para admitir avatares y fotos tácticas en Base64
   app.use(json({ limit: '25mb' }));
   app.use(urlencoded({ extended: true, limit: '25mb' }));
 
-  // 1. Seguridad de Cabeceras HTTP
-  app.use(helmet());
+  // 1. Seguridad de Cabeceras HTTP (compatible con recursos externos, WebSockets y proxy Ngrok)
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      contentSecurityPolicy: {
+        useDefaults: true,
+        directives: {
+          'img-src': ["'self'", 'data:', 'blob:', 'https:', 'http:'],
+          'connect-src': ["'self'", 'https:', 'wss:', 'http:', 'ws:'],
+          'upgrade-insecure-requests': null,
+        },
+      },
+    }),
+  );
 
   // 2. Validación estricta de DTOs
   app.useGlobalPipes(
