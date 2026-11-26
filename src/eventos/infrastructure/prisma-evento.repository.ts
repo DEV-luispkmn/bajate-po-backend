@@ -14,6 +14,7 @@ export class PrismaEventoRepository implements IEventoRepository, OnModuleInit {
 
   private readonly includeEventoCompleto = {
     bandos: {
+      orderBy: { id: 'asc' as const },
       include: {
         lider: true,
         escuadras: {
