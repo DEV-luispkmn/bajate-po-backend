@@ -21,6 +21,7 @@ import { SalirEquipoUseCase } from '../application/salir-equipo.use-case';
 import { DesintegrarEquipoUseCase } from '../application/desintegrar-equipo.use-case';
 import { CambiarPostulacionesUseCase } from '../application/cambiar-postulaciones.use-case';
 import { AsignarTLUseCase } from '../application/asignar-tl.use-case';
+import { ExpulsarMiembroUseCase } from '../application/expulsar-miembro.use-case';
 import { ModificarEquipoUseCase } from '../application/modificar-equipo.use-case';
 import { PostularEquipoUseCase } from '../application/postular-equipo.use-case';
 import { ListarPostulacionesEquipoUseCase } from '../application/listar-postulaciones-equipo.use-case';
@@ -47,6 +48,7 @@ export class EquiposController {
     private readonly desintegrarEquipoUseCase: DesintegrarEquipoUseCase,
     private readonly cambiarPostulacionesUseCase: CambiarPostulacionesUseCase,
     private readonly asignarTLUseCase: AsignarTLUseCase,
+    private readonly expulsarMiembroUseCase: ExpulsarMiembroUseCase,
     private readonly modificarEquipoUseCase: ModificarEquipoUseCase,
     private readonly postularEquipoUseCase: PostularEquipoUseCase,
     private readonly listarPostulacionesEquipoUseCase: ListarPostulacionesEquipoUseCase,
@@ -163,6 +165,15 @@ export class EquiposController {
     @Body('nuevoTlId', ParseIntPipe) nuevoTlId: number,
   ): Promise<Equipo> {
     return this.asignarTLUseCase.execute(user.id ?? user.userId, nuevoTlId);
+  }
+
+  @Delete('mi-equipo/miembros/:jugadorId')
+  @UseGuards(JwtAuthGuard)
+  async expulsarMiembro(
+    @CurrentUser() user: any,
+    @Param('jugadorId', ParseIntPipe) jugadorId: number,
+  ): Promise<Equipo> {
+    return this.expulsarMiembroUseCase.execute(user.id ?? user.userId, jugadorId);
   }
 
   @Post(':id/postular')

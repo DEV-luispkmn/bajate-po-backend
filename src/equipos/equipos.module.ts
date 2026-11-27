@@ -12,6 +12,7 @@ import { SalirEquipoUseCase } from './application/salir-equipo.use-case';
 import { DesintegrarEquipoUseCase } from './application/desintegrar-equipo.use-case';
 import { CambiarPostulacionesUseCase } from './application/cambiar-postulaciones.use-case';
 import { AsignarTLUseCase } from './application/asignar-tl.use-case';
+import { ExpulsarMiembroUseCase } from './application/expulsar-miembro.use-case';
 import { ModificarEquipoUseCase } from './application/modificar-equipo.use-case';
 import { PostularEquipoUseCase } from './application/postular-equipo.use-case';
 import { ListarPostulacionesEquipoUseCase } from './application/listar-postulaciones-equipo.use-case';
@@ -37,6 +38,7 @@ import { NotificacionesModule } from '../notificaciones/notificaciones.module';
     DesintegrarEquipoUseCase,
     CambiarPostulacionesUseCase,
     AsignarTLUseCase,
+    ExpulsarMiembroUseCase,
     ModificarEquipoUseCase,
     PostularEquipoUseCase,
     ListarPostulacionesEquipoUseCase,
